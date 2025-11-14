@@ -36,11 +36,13 @@ const EventModel = require('./models/event.js')
 // const GroupModel = require('./models/Group');
 const ContactModel = require('./models/contact.js')
 const User = require('./models/User.js')
+const dotenv = require("dotenv");
 
 // const PORT = process.env.PORT;
 const PORT = process.env.PORT || 3001;
 const app = express()
-// dotenv.config();
+
+dotenv.config();
 app.use(express.json())
 // app.use(cors())
 app.use(cors({
@@ -54,14 +56,14 @@ app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // serve uploaded files
 // const __dirname = path.resolve();
 
-mongoose.connect('mongodb://127.0.0.1:27017/schoolDB')
+// mongoose.connect('mongodb://127.0.0.1:27017/schoolDB')
 // const URL = "mongodb://127.0.0.1:27017/school"
-//  const URL = process.env.MONGODB_URL;
+ const URL = process.env.MONGODB_URL;
 //  {
 //   useNewUrlParser: true,
 //   useUnifiedTopology: true
 // }
-// mongoose.connect(URL)
+mongoose.connect(URL)
 .then(() => console.log("✅ Connected to MongoDB successfully"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
