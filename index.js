@@ -46,7 +46,7 @@ dotenv.config();
 app.use(express.json())
 // app.use(cors())
 app.use(cors({
-  // origin: "http://localhost:5174",
+  origin: "https://school-f.vercel.app",
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Content-Type, Authorization"
 }));
@@ -388,7 +388,7 @@ app.post('/contactschool', (req, res) => {
     .catch(err => res.json(err));
 })
 
-app.get("/" , (req,res) => {
+app.get("/events" , (req,res) => {
     EventModel.find({})
     .then(event => res.json(event))
     .catch(err => res.json(err))
