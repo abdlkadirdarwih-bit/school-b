@@ -1,7 +1,7 @@
 
     // "start": "nodemon index.js"
 
-
+// https://cloud.mongodb.com/v2/69174dafe7ce87484f328a3f#/metrics/replicaSet/69174ed97aa26f33bdfdcf55/explorer/schoolDB/users/find
 // div multi line in react
 // design ui/ux add event web 
 // https://www.w3schools.com/css/css_image_transparency.asp
@@ -45,13 +45,31 @@ const app = express()
 dotenv.config();
 app.use(express.json())
 // app.use(cors())
+// app.use(cors({
+//   origin: "https://school-f.vercel.app",
+//   methods: "GET,POST,PUT,DELETE,OPTIONS",
+//   allowedHeaders: "Content-Type, Authorization"
+// }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL_LOCAL,
+  process.env.FRONTEND_URL_PROD
+];
+
 app.use(cors({
-  origin: "https://school-f.vercel.app",
-  methods: "GET,POST,PUT,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type, Authorization"
+  origin: function(origin, callback){
+    // allow requests with no origin (Postman, curl)
+    if(!origin) return callback(null, true);
+
+    if(allowedOrigins.indexOf(origin) === -1){
+      const msg = `CORS policy: ${origin} not allowed`;
+      return callback(new Error(msg), false);
+    }
+
+    return callback(null, true);
+  },
+  credentials: true
 }));
 
-// app.options("*", cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // serve uploaded files
 // const __dirname = path.resolve();
@@ -388,9 +406,9 @@ app.post('/contactschool', (req, res) => {
     .catch(err => res.json(err));
 })
 
-app.get("/events" , (req,res) => {
-    EventModel.find({})
-    .then(event => res.json(event))
+app.get("/" , (req,res) => {
+    EventModel.find({}) //حتىalways returns an array, even  if empty .
+    .then(event => res.json(event))    // sends array of events
     .catch(err => res.json(err))
 })
 
@@ -406,7 +424,7 @@ app.get("/events" , (req,res) => {
 app.get("/getUser/:id" , (req,res) => {
     const id = req.params.id;
     EventModel.findById({_id:id})
-    .then(event => res.json(event))
+    .then(event => res.json(event)) 
     .catch(err => res.json(err))
 })
 
@@ -564,7 +582,7 @@ app.put("/deleteEventImage/:id", async (req, res) => {
 
 
 
-app.get("/", (req, res) => {
+app.get("/req", (req, res) => {
   res.send("Backend is working success ✅");
 });
 
