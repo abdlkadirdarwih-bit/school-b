@@ -150,18 +150,21 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Multer setup
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // folder for uploaded images
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname); // unique filenames
-  }
-});
+// const storage = multer.memoryStorage({
 
-const upload = multer({ storage });
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/'); // folder for uploaded images
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + '-' + file.originalname); // unique filenames
+//   }
+// });
 
-// ✅ Create Event with mainImage + multiple images
+// const upload = multer({ storage });
+
+
+
 // app.post("/createEvent", upload.fields([
 //   { name: "mainImage", maxCount: 1 },
 //   { name: "images", maxCount: 10 }
@@ -169,9 +172,16 @@ const upload = multer({ storage });
 //   try {
 //     const { date, place, title, text } = req.body;
 
-//     const mainImagePath = req.files.mainImage ? req.files.mainImage[0].path : '';
-//     const imagesPaths = req.files.images ? req.files.images.map(f => f.path) : [];
+//     // Construct URLs for main image and additional images
+//     const mainImagePath = req.files.mainImage 
+//       ? '/uploads/' + req.files.mainImage[0].filename 
+//       : '';
 
+//     const imagesPaths = req.files.images 
+//       ? req.files.images.map(f => '/uploads/' + f.filename) 
+//       : [];
+
+//     // Create and save new event
 //     const newEvent = new EventModel({
 //       mainImage: mainImagePath,
 //       images: imagesPaths,
@@ -184,52 +194,78 @@ const upload = multer({ storage });
 //     const savedEvent = await newEvent.save();
 //     res.status(201).json(savedEvent);
 //     console.log("📌 Event saved:", savedEvent);
+
 //   } catch (err) {
-//     console.error(err);
+//     console.error(err); 
 //     res.status(500).json({ error: err.message });
 //   }
 // });
 
 
-app.post("/createEvent", upload.fields([
-  { name: "mainImage", maxCount: 1 },
-  { name: "images", maxCount: 10 }
-]), async (req, res) => {
-  try {
-    const { date, place, title, text } = req.body;
 
-    // Construct URLs for main image and additional images
-    const mainImagePath = req.files.mainImage 
-      ? '/uploads/' + req.files.mainImage[0].filename 
-      : '';
 
-    const imagesPaths = req.files.images 
-      ? req.files.images.map(f => '/uploads/' + f.filename) 
-      : [];
+const upload = multer({ storage: multer.memoryStorage() });
 
-    // Create and save new event
-    const newEvent = new EventModel({
-      mainImage: mainImagePath,
-      images: imagesPaths,
-      date,
-      place,
-      title,
-      text
-    });
+const uploadToCloud = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (err, result) => {
+        if (err) reject(err);
+        else resolve(result.secure_url);
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
 
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
-    console.log("📌 Event saved:", savedEvent);
+app.post(
+  "/createEvent",
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "images", maxCount: 10 }
+  ]),
+  async (req, res) => {
+    try {
+      const { date, place, title, text } = req.body;
 
-  } catch (err) {
-    console.error(err); 
-    res.status(500).json({ error: err.message });
+      // Upload main image
+      let mainImageUrl = "";
+      if (req.files.mainImage) {
+        mainImageUrl = await uploadToCloud(
+          req.files.mainImage[0].buffer,
+          "events"
+        );
+      }
+
+      // Upload multiple images
+      let imagesUrls = [];
+      if (req.files.images) {
+        for (const file of req.files.images) {
+          const url = await uploadToCloud(file.buffer, "events");
+          imagesUrls.push(url);
+        }
+      }
+
+      // Save event
+      const newEvent = new EventModel({
+        mainImage: mainImageUrl,
+        images: imagesUrls,
+        date,
+        place,
+        title,
+        text
+      });
+
+      const saved = await newEvent.save();
+      res.status(201).json(saved);
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: err.message });
+    }
   }
-});
-
-
-
-
+);
 
 // crud
 // const express = require('express')
