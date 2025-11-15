@@ -583,7 +583,7 @@ app.put("/deleteEventImage/:id", async (req, res) => {
 
 
 app.get("/req", (req, res) => {
-  res.send("Backend is working success ✅");
+  res.send("Backend is working success. ✅");
 });
 
 
