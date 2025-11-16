@@ -200,42 +200,62 @@ if (!fs.existsSync(uploadDir)) {
 //     res.status(500).json({ error: err.message });
 //   }
 // });
-
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-app.post("/createEventBase64", upload.fields([
-  { name: "mainImage", maxCount: 1 },
-  { name: "images", maxCount: 10 }
-]), async (req, res) => {
+app.post("/createEventBase64", async (req, res) => {
   try {
-    const { date, place, title, text } = req.body;
-
-    let mainImageBase64 = req.files.mainImage
-      ? req.files.mainImage[0].buffer.toString("base64")
-      : "";
-
-    let imagesBase64 = req.files.images
-      ? req.files.images.map(f => f.buffer.toString("base64"))
-      : [];
+    const { date, place, title, text, mainImage, images } = req.body;
 
     const newEvent = new EventModel({
-      mainImage: mainImageBase64,
-      images: imagesBase64,
+      mainImage: mainImage || "",
+      images: images || [],
       date,
       place,
       title,
-      text
+      text,
     });
 
     const savedEvent = await newEvent.save();
     res.status(201).json(savedEvent);
-
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
+
+// last
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage });
+
+// app.post("/createEventBase64", upload.fields([
+//   { name: "mainImage", maxCount: 1 },
+//   { name: "images", maxCount: 10 }
+// ]), async (req, res) => {
+//   try {
+//     const { date, place, title, text } = req.body;
+
+//     let mainImageBase64 = req.files.mainImage
+//       ? req.files.mainImage[0].buffer.toString("base64")
+//       : "";
+
+//     let imagesBase64 = req.files.images
+//       ? req.files.images.map(f => f.buffer.toString("base64"))
+//       : [];
+
+//     const newEvent = new EventModel({
+//       mainImage: mainImageBase64,
+//       images: imagesBase64,
+//       date,
+//       place,
+//       title,
+//       text
+//     });
+
+//     const savedEvent = await newEvent.save();
+//     res.status(201).json(savedEvent);
+
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 
 // const upload = multer({ storage: multer.memoryStorage() });
