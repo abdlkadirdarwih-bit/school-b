@@ -202,70 +202,104 @@ if (!fs.existsSync(uploadDir)) {
 // });
 
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
+app.post("/createEventBase64", upload.fields([
+  { name: "mainImage", maxCount: 1 },
+  { name: "images", maxCount: 10 }
+]), async (req, res) => {
+  try {
+    const { date, place, title, text } = req.body;
 
-const upload = multer({ storage: multer.memoryStorage() });
+    let mainImageBase64 = req.files.mainImage
+      ? req.files.mainImage[0].buffer.toString("base64")
+      : "";
 
-const uploadToCloud = (buffer, folder) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder },
-      (err, result) => {
-        if (err) reject(err);
-        else resolve(result.secure_url);
-      }
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-};
+    let imagesBase64 = req.files.images
+      ? req.files.images.map(f => f.buffer.toString("base64"))
+      : [];
 
-app.post(
-  "/createEvent",
-  upload.fields([
-    { name: "mainImage", maxCount: 1 },
-    { name: "images", maxCount: 10 }
-  ]),
-  async (req, res) => {
-    try {
-      const { date, place, title, text } = req.body;
+    const newEvent = new EventModel({
+      mainImage: mainImageBase64,
+      images: imagesBase64,
+      date,
+      place,
+      title,
+      text
+    });
 
-      // Upload main image
-      let mainImageUrl = "";
-      if (req.files.mainImage) {
-        mainImageUrl = await uploadToCloud(
-          req.files.mainImage[0].buffer,
-          "events"
-        );
-      }
+    const savedEvent = await newEvent.save();
+    res.status(201).json(savedEvent);
 
-      // Upload multiple images
-      let imagesUrls = [];
-      if (req.files.images) {
-        for (const file of req.files.images) {
-          const url = await uploadToCloud(file.buffer, "events");
-          imagesUrls.push(url);
-        }
-      }
-
-      // Save event
-      const newEvent = new EventModel({
-        mainImage: mainImageUrl,
-        images: imagesUrls,
-        date,
-        place,
-        title,
-        text
-      });
-
-      const saved = await newEvent.save();
-      res.status(201).json(saved);
-
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: err.message });
-    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-);
+});
+
+
+// const upload = multer({ storage: multer.memoryStorage() });
+
+// const uploadToCloud = (buffer, folder) => {
+//   return new Promise((resolve, reject) => {
+//     const stream = cloudinary.uploader.upload_stream(
+//       { folder },
+//       (err, result) => {
+//         if (err) reject(err);
+//         else resolve(result.secure_url);
+//       }
+//     );
+//     streamifier.createReadStream(buffer).pipe(stream);
+//   });
+// };
+
+// app.post(
+//   "/createEvent",
+//   upload.fields([
+//     { name: "mainImage", maxCount: 1 },
+//     { name: "images", maxCount: 10 }
+//   ]),
+//   async (req, res) => {
+//     try {
+//       const { date, place, title, text } = req.body;
+
+//       // Upload main image
+//       let mainImageUrl = "";
+//       if (req.files.mainImage) {
+//         mainImageUrl = await uploadToCloud(
+//           req.files.mainImage[0].buffer,
+//           "events"
+//         );
+//       }
+
+//       // Upload multiple images
+//       let imagesUrls = [];
+//       if (req.files.images) {
+//         for (const file of req.files.images) {
+//           const url = await uploadToCloud(file.buffer, "events");
+//           imagesUrls.push(url);
+//         }
+//       }
+
+//       // Save event
+//       const newEvent = new EventModel({
+//         mainImage: mainImageUrl,
+//         images: imagesUrls,
+//         date,
+//         place,
+//         title,
+//         text
+//       });
+
+//       const saved = await newEvent.save();
+//       res.status(201).json(saved);
+
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
 
 // crud
 // const express = require('express')
@@ -544,18 +578,22 @@ app.delete("/deleteUser/:id", async (req, res) => {
 
 
 // ✅ Create user
-app.post("/createEvent", async (req, res) => {
-  try {
-    const newUser = new EventModel(req.body);   // create new user instance
-    const savedUser = await newUser.save();    // save to DB
-    
-  res.status(201).json(savedUser);           // send back saved user
-            // console.log("📌 Event saved:", savedUser); // 👈 log here
 
-} catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
+// use
+
+// app.post("/createEvent", async (req, res) => {
+//   try {
+//     const newUser = new EventModel(req.body);   // create new user instance
+//     const savedUser = await newUser.save();    // save to DB
+    
+//   res.status(201).json(savedUser);           // send back saved user
+//             // console.log("📌 Event saved:", savedUser); // 👈 log here
+
+// } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 
 
@@ -599,6 +637,8 @@ app.post("/createEvent", async (req, res) => {
 // Use PUT (or PATCH) when you want to delete one or more images from an existing event but keep the event itself.
 // Example: remove the 2nd image from images array → event still exists.
 // Works for multiple images, you just update the array.
+
+
 app.put("/deleteEventImage/:id", async (req, res) => {
   try {
     const { index } = req.body;
