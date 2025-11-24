@@ -101,12 +101,12 @@ mongoose.connect(URL)
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user) return res.status(400).json({ message: "Invalid email or password" });
+  if (!user) return res.status(400).json({ message: " البريد الإلكتروني أو كلمة المرور  غير صحيحة " });
 
   const valid = await user.validatePassword(password);
-  if (!valid) return res.status(400).json({ message: "Invalid email or password" });
+  if (!valid) return res.status(400).json({ message: " البريد الإلكتروني أو كلمة المرور  غير صحيحة " });
 
-  res.json({ message: "Login successful", email: user.email });
+  res.json({ message: " تسجيل دخول صحيح", email: user.email });
 });
 
 // 🔐 Change Password Route
@@ -485,6 +485,15 @@ app.get('/contactschool', async (req, res) => {
     res.json(contacts);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch contacts" });
+  }
+});
+
+app.delete("/deleteMessage/:id", async (req, res) => {
+  try {
+    await ContactModel.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Message deleted" });
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 
