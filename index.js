@@ -9,30 +9,28 @@
 // This is how you "create" data in MongoDB through a React app.
 //React sends a POST request.
 // Express receives it and uses Mongoose to create in MongoDB.
+// https://cloud.mongodb.com/v2/69174dafe7ce87484f328a3f#/explorer/69174df495eaf35c70234139
+
+
+
+
 
 // import dotenv from "dotenv";
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require("cors")
 const bodyParser = require("body-parser");
- const bcrypt = require("bcrypt");
+//  const bcrypt = require("bcrypt");
  
-const Loginsch = require('./models/Loginsch.js')
 
-const multer = require('multer');
+// const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 // import path from "path";
 
-// crud
-// const UserModel = require('./models/Users.js')
-// order product
-const OrderModel = require('./models/order.js')
-// orderscheck
-const OrderscheckModel = require('./models/orders.js')
+
 // event activities 
 const EventModel = require('./models/event.js')
-// const GroupModel = require('./models/Group');
 // const GroupModel = require('./models/Group');
 const ContactModel = require('./models/contact.js')
 const User = require('./models/User.js')
@@ -46,7 +44,6 @@ dotenv.config();
 app.use(express.json())
 // app.use(express.json({ limit: "10mb" }));
 // app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-// app.use(cors())
 // app.use(cors({
 //   origin: "https://school-f.vercel.app",
 //   methods: "GET,POST,PUT,DELETE,OPTIONS",
@@ -98,6 +95,8 @@ mongoose.connect(URL)
 
 
 // 📝 Login Route
+
+
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email: email.toLowerCase() });
@@ -109,13 +108,13 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ message: " تسجيل دخول صحيح", email: user.email });
 });
 
-// 🔐 Change Password Route
+//  Change Password Route
 app.post("/api/auth/change-password", async (req, res) => {
   const { email, oldPassword,newPassword } = req.body;
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) return res.status(400).json({ message: "User not found" });
 
-  // 🛡️ Verify old password
+  //  Verify old password
   const valid = await user.validatePassword(oldPassword);
   if (!valid) return res.status(400).json({ message: "Old password is incorrect" });
 
@@ -125,7 +124,7 @@ app.post("/api/auth/change-password", async (req, res) => {
   res.json({ message: "Password updated successfully" });
 });
 
-// 🧪 Register Route
+//  Register Route
 app.post("/api/auth/register", async (req, res) => {
   const { email, password } = req.body;
   const exist = await User.findOne({ email: email.toLowerCase() });
@@ -145,7 +144,7 @@ app.post("/api/auth/register", async (req, res) => {
 
 
 
-// ✅ Ensure uploads folder exists
+//  Ensure uploads folder exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
@@ -361,54 +360,10 @@ app.post("/createEventBase64", async (req, res) => {
 
 
 
-app.post("/loginsch", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    // Check if this is the allowed account
-    if (email === "ali@gmail.com") {
-
-      // Look for the user in MongoDB
-      let user = await Loginsch.findOne({ email });
-
-      if (!user) {
-        // User doesn't exist → create it
-        const newUser = new Loginsch({ email, password: "34432" }); // save default password
-        await newUser.save();
-        console.log("✅ New user ali@gmail.com created in MongoDB");
-        return res.json("registered and logged in");
-      }
-
-      // User exists → check password
-      if (password === "34432") {
-        console.log("✅ Login successful for ali@gmail.com");
-        return res.json("success");
-      } else {
-        return res.json("the password is incorrect");
-      }
-
-    } else {
-      // Any other email → not allowed
-      return res.json("invalid credentials");
-    }
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json(err);
-  }
-});
 
 
 
-app.delete("/delete-abd", async (req, res) => {
-  try {
-    await Loginsch.deleteMany({ email: "abd@gmail.com" });
-    res.send("✅ abd@gmail.com removed from MongoDB");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error deleting user");
-  }
-});
+
 
 // app.post("/login", (req, res) => {
 //   const { email, password } = req.body;
@@ -441,46 +396,12 @@ app.delete("/delete-abd", async (req, res) => {
 
 
 
-app.post('/register', (req, res) => {
-  EmployeeModel.create(req.body)
-    .then(signuptalabe => res.json(signuptalabe))
-    .catch(err => res.json(err));
-})
-
-
-// order 
-app.post('/orderproduct', (req, res) => {
-    console.log("📩 Incoming order:", req.body);  // للتأكد من وصول البيانات
-
-  OrderModel.create(req.body)
-    .then(orderproduct=>{
-            console.log("✅ Saved order:", orderproduct);
-
-       res.json(orderproduct)})
-    .catch(err => res.json(err));
-})
-
-
-
-// orders 
-app.post('/ordersproducts', (req, res) => {
-    console.log("📩 Incoming order:", req.body);  // للتأكد من وصول البيانات
-
-  OrderscheckModel.create(req.body)
-    .then(orderscheck=>{
-            // console.log("✅ Saved order:", orderscheck);
-
-       res.json(orderscheck)})
-    .catch(err => res.json(err));
-})
-
-
-// Add a route to fetch all saved contacts in react:
+// Add a route to fetch   saved contacts in react:
 
 app.get('/contactschool', async (req, res) => {
   try {
     const contacts = await ContactModel.find();
-        // console.log("📩 Sending contacts:", contacts); 
+        // console.log(" Sending contacts:", contacts); 
 
     res.json(contacts);
   } catch (err) {
@@ -498,32 +419,28 @@ app.delete("/deleteMessage/:id", async (req, res) => {
 });
 
 app.post('/contactschool', (req, res) => {
-    // console.log("📩 Incoming order:", req.body); 
+    // console.log(" Incoming order:", req.body); 
      // للتأكد من وصول البيانات
 
   ContactModel.create(req.body)
     .then(contactsch=>{
-            console.log("✅ Saved order:", contactsch);
+            console.log(" Saved order:", contactsch);
 
        res.json(contactsch)})
     .catch(err => res.json(err));
 })
 
 app.get("/" , (req,res) => {
-    EventModel.find({}) //حتىalways returns an array, even  if empty .
-    .then(event => res.json(event))    // sends array of events
+ EventModel.find({}) //حتىalways returns an array, even  if empty .
+    .then(event => res.json(event))     // sends array of events
     .catch(err => res.json(err))
 })
 
+ 
 
 
-// app.get("/" , (req,res) => {
-//     const id = req.params.id;
-//     UserModel.findById({_id:id})
-//     .then(users => res.json(users))
-//     .catch(err => res.json(err))
-// })  
 // true
+
 app.get("/getUser/:id" , (req,res) => {
     const id = req.params.id;
     EventModel.findById({_id:id})
@@ -546,13 +463,13 @@ app.get("/getUser/:id" , (req,res) => {
 app.put("/updateEvent/:id" , (req,res) => {
     const id = req.params.id;
     EventModel.findByIdAndUpdate({_id:id}, {
-                mainImage	: req.body.mainImage	,  
-
+// Updated fields
+     mainImage	: req.body.mainImage	,  
       images	: req.body.images	,  
       date	: req.body.date,  
      place: req.body.place,  
-           title : req.body. title , 
-                       text: req.body.  text,  
+           title : req.body.title , 
+         text: req.body.text,  
  
             
 
@@ -566,13 +483,6 @@ app.put("/updateEvent/:id" , (req,res) => {
 })  
 
 
-// app.delete("/deleteUser/:id" , (req,res) => {
-//     const id = req.params.id;
-//     UserModel.findByIdAndDelete({_id:id})
-  
-//     .then(users => res.json(users))
-//     .catch(err => res.json(err))
-// })  
 
 
 app.delete("/deleteUser/:id", async (req, res) => {
@@ -589,103 +499,22 @@ app.delete("/deleteUser/:id", async (req, res) => {
 });
 
 
-// app.post("/createUser" , (req,res) => {
-//     UserModel.create(req.body)
-//     .then(users => res.json(users))
-//         // .then(user => res.json(user))
 
-//         // .then(groups => res.json(groups))
-
-//     .catch(err => res.json(err))
-// })
-
-// app.post("/createUser", async (req, res) => {
+// app.put("/deleteEventImage/:id" ,async (req, res) => {
 //   try {
-//     const newProduct = new Product(req.body);
-//     const savedProduct = await newProduct.save();
-//     res.json(savedProduct);
-//   } catch (err) {
-//     res.status(500).json(err);
-//   }
-// });
+//     // Receives image index from frontend
+//     const { index } = req.body;
+//     const event = await EventModel.findById(req.params.id);
+//     if (!event) return res.status(404).json({ error: "Event not found" });
 
-
-// ✅ Create user
-
-
-// use
-
-// app.post("/createEvent", async (req, res) => {
-//   try {
-//     const newUser = new EventModel(req.body);   // create new user instance
-//     const savedUser = await newUser.save();    // save to DB
-    
-//   res.status(201).json(savedUser);           // send back saved user
-//             // console.log("📌 Event saved:", savedUser); // 👈 log here
-
-// } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-
-
-
-
-// app.put("/updateCount/:id", async (req, res) => {
-//   try {
-//     const updated = await UserModel.findByIdAndUpdate(
-//       req.params.id,
-//       { count: req.body.count },
-//             // { $inc: { count: req.body.inc } }, // inc = +1 أو -1 من الـ frontend
-
-//       { new: true }
-//     );
-//     res.json(updated);
-//   } catch (err) {
-//     console.error("❌ Error updating count:", err); // يظهر في الـ terminal
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-
-// Update one image by index
-// app.put("/updateEventImage/:id", async (req, res) => {
-//   try {
-//     const { index, url } = req.body;
-//     const event = await UserModel.findById(req.params.id);
-
-//     if (!event) return res.status(404).json({ message: "Event not found" });
-
-//     event.images[index] = url; // replace image at index
+//     event.images.splice(index, 1); // remove the image at the given index
 //     await event.save();
 
-//     res.json({ message: "Image updated", event });
+//     res.json(event);
 //   } catch (err) {
 //     res.status(500).json(err);
 //   }
 // });
-
-// Use DELETE only when you want to delete the entire event.
-// Use PUT (or PATCH) when you want to delete one or more images from an existing event but keep the event itself.
-// Example: remove the 2nd image from images array → event still exists.
-// Works for multiple images, you just update the array.
-
-
-app.put("/deleteEventImage/:id", async (req, res) => {
-  try {
-    const { index } = req.body;
-    const event = await EventModel.findById(req.params.id);
-    if (!event) return res.status(404).json({ error: "Event not found" });
-
-    event.images.splice(index, 1); // remove the image at the given index
-    await event.save();
-
-    res.json(event);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
 
 
 
